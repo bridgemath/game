@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Team 2 입력기</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --primary:#ef4444; --light:#fee2e2; --dark:#7f1d1d;
+  --bg:#fff1f2; --card:#fff; --ink:#0f172a; --muted:#64748b;
+  --border:#fecaca; --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--ink);
+  min-height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;
+}
+header{
+  background:linear-gradient(135deg,var(--primary),#b91c1c);
+  padding:14px 18px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+header h1{font-family:'Black Han Sans',sans-serif;font-size:22px;color:#fff}
+.timer-badge{
+  background:rgba(0,0,0,.3);border-radius:99px;padding:6px 14px;
+  font-family:'Black Han Sans',sans-serif;font-size:20px;color:#fff;
+  border:1px solid rgba(255,255,255,.3);
+}
+.timer-badge.urgent{color:#fbbf24;animation:blink .5s ease infinite alternate}
+@keyframes blink{from{opacity:1}to{opacity:.5}}
+.score-strip{
+  background:var(--dark);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.score-strip .my-score{font-family:'Black Han Sans',sans-serif;font-size:28px;color:#fff}
+.score-strip .opp-score{font-family:'Black Han Sans',sans-serif;font-size:20px;color:rgba(255,255,255,.5)}
+.tug-bar-wrap{flex:1;margin:0 14px;height:8px;background:rgba(255,255,255,.15);border-radius:99px;position:relative}
+.tug-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;background:#fff;border-radius:50%;border:3px solid var(--primary);transition:left .2s ease}
+.problem-card{
+  background:var(--card);border-bottom:3px solid var(--border);
+  padding:24px 18px;flex-shrink:0;
+}
+.prompt{font-size:14px;color:var(--muted);font-weight:700;margin-bottom:12px;text-align:center}
+.problem{
+  font-family:'Black Han Sans',sans-serif;font-size:52px;text-align:center;
+  color:var(--ink);line-height:1.1;
+}
+.answer-row{
+  display:flex;align-items:center;justify-content:center;margin-top:16px;
+  background:var(--light);border:2px solid var(--border);border-radius:12px;
+  padding:12px 16px;gap:12px;min-height:56px;
+}
+.answer-display{
+  font-family:'Black Han Sans',sans-serif;font-size:36px;
+  color:var(--primary);flex:1;text-align:center;letter-spacing:2px;
+}
+.answer-display.empty{color:#fecaca}
+.cursor{animation:cur .8s ease infinite;display:inline-block;width:3px;height:36px;background:var(--primary);vertical-align:middle;border-radius:2px}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+.keypad{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  padding:16px;flex:1;align-content:start;
+}
+.key{
+  border:none;border-radius:14px;font-family:'Noto Sans KR',sans-serif;
+  font-weight:900;font-size:26px;cursor:pointer;
+  padding:0;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  transition:transform .08s ease,filter .08s ease;user-select:none;
+  -webkit-user-select:none;
+}
+.key:active{transform:scale(.93);filter:brightness(.85)}
+.key.num{background:#fff;color:var(--ink);border:1.5px solid var(--border);box-shadow:0 3px 8px rgba(239,68,68,.1)}
+.key.del{background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;font-size:20px}
+.key.bs{background:#f1f5f9;color:var(--muted);border:1.5px solid #e2e8f0;font-size:20px}
+.key.submit{
+  background:linear-gradient(135deg,var(--primary),#b91c1c);color:#fff;
+  border:none;box-shadow:0 4px 16px rgba(239,68,68,.4);font-size:20px;
+  grid-column:span 2;aspect-ratio:auto;padding:16px;
+}
+.key.submit:disabled{background:#94a3b8;box-shadow:none}
+.key:disabled{opacity:.75;cursor:not-allowed}
+.feedback{
+  position:fixed;inset:0;pointer-events:none;z-index:50;
+  opacity:0;transition:opacity .1s;
+}
+.feedback.correct{background:rgba(34,197,94,.25)}
+.feedback.wrong{background:rgba(239,68,68,.2)}
+.feedback.show{opacity:1}
+.waiting{
+  position:fixed;inset:0;background:rgba(255,241,242,.35);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  z-index:100;pointer-events:none;
+}
+.waiting h2{font-family:'Black Han Sans',sans-serif;font-size:28px;color:var(--primary)}
+.waiting p{color:var(--muted);font-size:14px;font-weight:700;text-align:center;line-height:1.7}
+.spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status-bar{
+  background:var(--dark);padding:8px 16px;display:flex;justify-content:space-between;
+  font-size:12px;color:rgba(255,255,255,.6);font-weight:700;flex-shrink:0;
+}
+</style>
+</head>
+<body>
+
+<div class="feedback" id="feedback"></div>
+
+<div class="waiting" id="waiting">
+  <div class="spinner"></div>
+  <h2>🔴 Team 2</h2>
+  <p>관리자 탭에서 게임을 시작해 주세요.<br>admin.html을 열고 '게임 시작'을 누르세요.</p>
+</div>
+
+<header>
+  <h1>🔴 Team 2</h1>
+  <div class="timer-badge" id="timer">60</div>
+</header>
+
+<div class="score-strip">
+  <div>
+    <div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:700">내 점수</div>
+    <div class="my-score" id="myScore">0</div>
+  </div>
+  <div class="tug-bar-wrap" id="tugWrap">
+    <div class="tug-dot" id="tugDot" style="left:50%"></div>
+  </div>
+  <div style="text-align:right">
+    <div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:700">상대 점수</div>
+    <div class="opp-score" id="oppScore">0</div>
+  </div>
+</div>
+
+<div class="problem-card">
+  <div class="prompt">다음 문제의 정답을 입력하세요!</div>
+  <div class="problem" id="problem">?</div>
+  <div class="answer-row">
+    <div class="answer-display" id="answerDisplay"><span class="cursor"></span></div>
+  </div>
+</div>
+
+<div class="keypad">
+  <button class="key num" onclick="press('1')">1</button>
+  <button class="key num" onclick="press('2')">2</button>
+  <button class="key num" onclick="press('3')">3</button>
+  <button class="key del" onclick="press('DEL')">전체<br>삭제</button>
+  <button class="key num" onclick="press('4')">4</button>
+  <button class="key num" onclick="press('5')">5</button>
+  <button class="key num" onclick="press('6')">6</button>
+  <button class="key bs" onclick="press('BS')">⌫</button>
+  <button class="key num" onclick="press('7')">7</button>
+  <button class="key num" onclick="press('8')">8</button>
+  <button class="key num" onclick="press('9')">9</button>
+  <button class="key num" onclick="press('0')">0</button>
+  <button class="key submit" onclick="submitAnswer()" id="submitBtn">정답 제출 ✔</button>
+</div>
+
+<div class="status-bar">
+  <span id="statusLeft">대기중</span>
+  <span id="statusRight">Team 2 입력기</span>
+</div>
+
+<script>
+const ch = new BroadcastChannel('tug_math');
+let currentVal = '';
+let gameRunning = false;
+
+function updateDisplay(){
+  const el = document.getElementById('answerDisplay');
+  if(currentVal===''){
+    el.innerHTML='<span class="cursor"></span>';
+    el.classList.add('empty');
+  } else {
+    el.textContent=currentVal;
+    el.classList.remove('empty');
+  }
+}
+
+function press(k){
+  if(!gameRunning) return;
+  if(k==='DEL'){ currentVal=''; }
+  else if(k==='BS'){ currentVal=currentVal.slice(0,-1); }
+  else { if(currentVal.length<6) currentVal+=k; }
+  updateDisplay();
+}
+
+function submitAnswer(){
+  if(!gameRunning||currentVal==='') return;
+  ch.postMessage({type:'ANSWER',team:2,answer:currentVal});
+  currentVal='';
+  updateDisplay();
+}
+
+function applyState(d){
+  const running = d.running && !d.paused && !d.win;
+  gameRunning=running;
+  document.getElementById('waiting').style.display=(!d.running&&!d.win)?'flex':'none';
+
+  const tl=d.timeLeft??0;
+  const timerEl=document.getElementById('timer');
+  timerEl.textContent=String(tl).padStart(2,'0');
+  timerEl.className='timer-badge'+(tl<=10&&running?' urgent':'');
+
+  document.getElementById('myScore').textContent=d.t2Score??0;
+  document.getElementById('oppScore').textContent=d.t1Score??0;
+  document.getElementById('problem').textContent=d.t2Q?.text||'?';
+
+  const t=d.tug??0;
+  document.getElementById('tugDot').style.left=(50+(t/100)*40)+'%';
+
+  document.getElementById('statusLeft').textContent=
+    d.win?`게임 종료! ${d.win===2?(d.t2Name||'Team 2')+'승리':'상대팀 승리'}`:
+    d.paused?'⏸ 일시정지':running?'🟢 게임 진행중':'⏳ 대기중';
+
+  document.querySelectorAll('.key').forEach(k=>k.disabled=!running);
+}
+
+ch.onmessage=e=>{
+  const{type,...d}=e.data;
+  if(type==='FULL_STATE') applyState(d);
+};
+
+ch.postMessage({type:'REQUEST_STATE'});
+
+document.addEventListener('keydown',e=>{
+  if(!gameRunning) return;
+  if(e.key>='0'&&e.key<='9') press(e.key);
+  else if(e.key==='Backspace') press('BS');
+  else if(e.key==='Delete') press('DEL');
+  else if(e.key==='Enter') submitAnswer();
+});
+
+updateDisplay();
+</script>
+</body>
+</html>
